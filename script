@@ -5,17 +5,27 @@ cd "$(dirname "$0")"
 USER=$(cat .env | grep 'USER' | cut -d '=' -f2 | xargs)
 PASS=$(cat .env | grep 'PASSWORD' | cut -d '=' -f2 | xargs)
 SLACK_WEBHOOK=$(cat .env | grep 'SLACK_WEBHOOK' | cut -d '=' -f2 | xargs)
+OPENVPN_FILE=$(cat .env | grep 'OPENVPN_FILE' | cut -d '=' -f2 | xargs)
 
 TIMEOUT=10
 PERCENT_TARGET=80
 
-if [[ -z "$USER" || -z "$PASS" || -z "$SLACK_WEBHOOK" ]]; then
+if [[ -z "$USER" || -z "$PASS" || -z "$SLACK_WEBHOOK" || -z "$OPENVPN_FILE" ]]; then
     echo "Error, provide a valid USER, PASSWORD and SLACK WEBHOOK"
     exit 1
 fi
 
 
 echo "Execution in: $(date '+%Y-%m-%d %H:%M:%S')"
+
+echo "Checking openvpn executation"
+if [ -z "$(pgrep openvpn)" ]; then
+    echo "OpenVpn are not in executation, starting..."
+    sudo openvpn "$OPENVPN_FILE" &> /dev/null &
+else
+    echo "OpenVpn already started"
+fi
+
 echo "Starting SBCs storage verification..."
 
 for i in {0..1}
